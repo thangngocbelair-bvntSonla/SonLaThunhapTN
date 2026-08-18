@@ -486,3 +486,48 @@ function tinhDoanhThuNhomQLTT_TruongBan(dataAPM01, maTruongBan) {
         danhSachChiTiet: dsNhomQLTT
     };
 }
+// 1. Hàm đọc file APM01 và cập nhật lại danh sách Dropdown
+function xuLySuaLoiTimKiem(dataAPM01Tho) {
+    // Bước A: Chuẩn hóa dữ liệu (Gán Trưởng Ban làm Trưởng Nhóm cho nhóm không mã)
+    const dataDaChuanHoa = dataAPM01Tho.map(row => {
+        let rowData = { ...row };
+        
+        // Lấy linh hoạt tên Trưởng Ban từ các cột thường gặp trong APM01
+        const tenTB = rowData['Ten_TB'] || rowData['Ten_Ban'] || rowData['Ten_BM'] || rowData['Ten_Quan_Ly'] || rowData['Ten_QL'];
+        const maTB = rowData['Ma_TB'] || rowData['Ma_Ban'] || rowData['Ma_BM'] || rowData['Ma_QL'];
+
+        // Nếu thiếu Mã nhóm hoặc Tên Trưởng nhóm -> Gán bằng thông tin Trưởng Ban
+        if (!rowData['Ma_Nhom'] || !rowData['Ten_TN'] || rowData['Ten_TN'].toString().trim() === '') {
+            rowData['Ten_TN'] = tenTB;
+            rowData['Ma_TN'] = maTB;
+            rowData['Is_QLTT'] = true;
+        }
+        return rowData;
+    });
+
+    // Lưu lại vào biến toàn cục
+    window.globalDataAPM01 = dataDaChuanHoa;
+
+    // Bước B: Trích xuất danh sách Trưởng nhóm duy nhất để đổ vào Dropdown
+    capNhatDanhSachDropdown(dataDaChuanHoa);
+}
+
+// 2. Hàm đổ dữ liệu vào Ô Chọn Trưởng Nhóm & hỗ trợ Tìm Kiếm
+function capNhatDanhSachDropdown(data) {
+    const selectBox = document.getElementById('select-truong-nhom') || document.querySelector('select[name="truong-nhom"]');
+    if (!selectBox) return;
+
+    // Lọc danh sách tên Trưởng Nhóm (không trùng lặp và bỏ trống)
+    const dsTenTN = [...new Set(data.map(item => item['Ten_TN']))].filter(Boolean);
+
+    // Xóa danh sách cũ
+    selectBox.innerHTML = '<option value="">-- Chọn Trưởng Nhóm --</option>';
+
+    // Thêm danh sách mới vào Dropdown
+    dsTenTN.forEach(ten => {
+        const option = document.createElement('option');
+        option.value = ten;
+        option.textContent = ten;
+        selectBox.appendChild(option);
+    });
+}
