@@ -412,3 +412,77 @@ function hienThiKetQuaLenGiaoDien(data) {
     if (elK2) elK2.innerText = (data.k2NhomGoc * 100).toFixed(1) + '%';
     if (elTongThuNhap) elTongThuNhap.innerText = data.tongThuNhap.toLocaleString('vi-VN') + ' VNĐ';
 }
+// ==========================================
+// BỔ SUNG: LOGIC GÁN TRƯỞNG BAN LÀM TRƯỞNG NHÓM QUẢN LÝ TRỰC TIẾP
+// (Cho trường hợp nhóm không có Mã nhóm/Trưởng nhóm)
+// ==========================================
+
+/**
+ * Hàm chuẩn hóa và gán thông tin Trưởng Nhóm cho các TVV thuộc nhóm trực tiếp của Ban
+ * @param {Array} dataAPM01 - Dữ liệu thô từ file APM01
+ * @returns {Array} Dữ liệu đã được gán lại thông tin Quản lý trực tiếp
+ */
+function chuanHoaNhomQuanLyTrucTiep(dataAPM01) {
+    if (!dataAPM01 || !Array.isArray(dataAPM01)) return [];
+
+    return dataAPM01.map(row => {
+        // Sao chép dòng dữ liệu để xử lý
+        let rowData = { ...row };
+
+        // Kiểm tra điều kiện: Không có Mã nhóm HOẶC Không có Tên Trưởng Nhóm
+        const khongCoMaNhom = !rowData['Ma_Nhom'] || rowData['Ma_Nhom'].toString().trim() === '';
+        const khongCoTruongNhom = !rowData['Ten_TN'] || rowData['Ten_TN'].toString().trim() === '';
+
+        if (khongCoMaNhom || khongCoTruongNhom) {
+            // Gán Mã Trưởng Nhóm = Mã Trưởng Ban
+            rowData['Ma_TN'] = rowData['Ma_TB'] || rowData['Ma_QL'];
+
+            // Gán Tên Trưởng Nhóm Quản lý trực tiếp = Tên Trưởng Ban (VD: Quàng Thị Giót)
+            rowData['Ten_TN'] = rowData['Ten_TB'] || rowData['Ten_Quan_Ly'] || 'Trưởng Ban Quản Lý Trực Tiếp';
+
+            // Đánh dấu đây là Nhóm Quản Lý Trực Tiếp (QLTT)
+            rowData['Loai_Nhom_QL'] = 'QLTT';
+            rowData['Ten_Nhom'] = `Nhóm QLTT - ${rowData['Ten_TN']}`;
+        }
+
+        return rowData;
+    });
+}
+
+/**
+ * Hàm gom nhóm và tính tổng chỉ số cho Trưởng Ban khi đóng vai trò Trưởng Nhóm QLTT
+ * @param {Array} dataAPM01 - Dữ liệu đã qua chuẩn hóa
+ * @param {String} maTruongBan - Mã của Trưởng Ban (Ví dụ mã của chị Quàng Thị Giót)
+ */
+function tinhDoanhThuNhomQLTT_TruongBan(dataAPM01, maTruongBan) {
+    // 1. Lọc toàn bộ danh sách thuộc nhóm QLTT của Trưởng Ban này
+    const dsNhomQLTT = dataAPM01.filter(row => {
+        return (row['Ma_TB'] === maTruongBan || row['Ma_TN'] === maTruongBan) && 
+               (row['Loai_Nhom_QL'] === 'QLTT' || !row['Ma_Nhom']);
+    });
+
+    // 2. Tính tổng FYP và Tỷ lệ K2 cho Nhóm QLTT
+    let tongFYP_QLTT = 0;
+    let tongK2 = 0;
+    let countK2 = 0;
+
+    dsNhomQLTT.forEach(item => {
+        tongFYP_QLTT += parseFloat(item['FYP']) || 0;
+        if (item['Ty_Le_K2'] !== undefined && item['Ty_Le_K2'] !== null) {
+            tongK2 += parseFloat(item['Ty_Le_K2']) || 0;
+            countK2++;
+        }
+    });
+
+    const k2TrungBinh = countK2 > 0 ? (tongK2 / countK2) : 0;
+    const tenTruongBan = dsNhomQLTT.length > 0 ? dsNhomQLTT[0]['Ten_TN'] : '';
+
+    return {
+        maTB: maTruongBan,
+        tenTruongNhomQLTT: tenTruongBan, // Sẽ hiển thị tên Trưởng Ban (VD: Quàng Thị Giót)
+        soLuongTVV: dsNhomQLTT.length,
+        fypNhomQLTT: tongFYP_QLTT,
+        k2NhomQLTT: k2TrungBinh,
+        danhSachChiTiet: dsNhomQLTT
+    };
+}
