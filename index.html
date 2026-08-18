@@ -319,3 +319,96 @@
   </script>
 </body>
 </html>
+1. Hàm lọc dữ liệu nhóm gốc (Nhóm trực tiếp) của Trưởng Ban từ APM01
+function layDuLieuNhomGocTB(dataAPM01, maTB) {
+    if (!dataAPM01 || dataAPM01.length === 0) return [];
+    
+    return dataAPM01.filter(row => {
+        // Điều kiện: Trùng mã Trưởng Ban và thuộc Nhóm Trực Tiếp / Nhóm Gốc
+        const isMaTB = (row['Ma_TB'] === maTB || row['Ma_QL'] === maTB);
+        const isNhomGoc = (row['Loai_Nhom'] === 'Nhóm Trực Tiếp' || row['Nhom_Goc'] === true || !row['Ma_TN']);
+        return isMaTB && isNhomGoc;
+    });
+}
+
+// 2. Hàm tính Doanh số FYP và Tỷ lệ K2 cho Nhóm gốc
+function tinhChiSoNhomGoc(danhSachNhomGoc) {
+    let tongFYP = 0;
+    let tongK2 = 0;
+    let countK2 = 0;
+
+    danhSachNhomGoc.forEach(row => {
+        // Cộng dồn FYP
+        const fyp = parseFloat(row['FYP']) || 0;
+        tongFYP += fyp;
+
+        // Tính trung bình K2
+        if (row['Ty_Le_K2'] !== undefined && row['Ty_Le_K2'] !== null) {
+            tongK2 += parseFloat(row['Ty_Le_K2']) || 0;
+            countK2++;
+        }
+    });
+
+    const k2TrungBinh = countK2 > 0 ? (tongK2 / countK2) : 0;
+
+    return {
+        fypNhomGoc: tongFYP,
+        k2NhomGoc: k2TrungBinh,
+        soLuongTVV: danhSachNhomGoc.length
+    };
+}
+
+// 3. Hàm tổng hợp thu nhập Trưởng Ban (Bao gồm Thưởng Nhóm Gốc + Thưởng Ban)
+function tinhThuNhapTB_CoNhomGoc(maTB) {
+    // Lấy dữ liệu thô từ file đã upload
+    const duLieuRaw = window.globalDataAPM01 || [];
+    
+    // Tách riêng nhóm gốc
+    const dsNhomGoc = layDuLieuNhomGocTB(duLieuRaw, maTB);
+    const chiSoGoc = tinhChiSoNhomGoc(dsNhomGoc);
+
+    // Tính thưởng Quản lý nhóm gốc (Sử dụng hàm tính thưởng Trưởng Nhóm tiêu chuẩn)
+    let thuNhapNhomGoc = 0;
+    if (typeof tinhThuNhapTN === 'function') {
+        thuNhapNhomGoc = tinhThuNhapTN(chiSoGoc.fypNhomGoc, chiSoGoc.k2NhomGoc);
+    } else {
+        // Công thức dự phòng nếu chưa có hàm tinhThuNhapTN
+        thuNhapNhomGoc = chiSoGoc.fypNhomGoc * 0.10; // Ví dụ: 10% FYP nhóm gốc
+    }
+
+    // Tính thưởng Quản lý Ban (phần doanh số vượt/toàn ban)
+    let thuNhapToanBan = 0;
+    if (typeof tinhDoanhThuTruongBan === 'function') {
+        thuNhapToanBan = tinhDoanhThuTruongBan(maTB);
+    }
+
+    // Tổng thu nhập dự kiến của Trưởng Ban
+    const tongThuNhap = thuNhapNhomGoc + thuNhapToanBan;
+
+    // Cập nhật kết quả lên màn hình Dashboard
+    hienThiKetQuaLenGiaoDien({
+        maQL: maTB,
+        role: 'Trưởng Ban (Quản lý Nhóm Gốc)',
+        fypNhomGoc: chiSoGoc.fypNhomGoc,
+        k2NhomGoc: chiSoGoc.k2NhomGoc,
+        thuNhapNhomGoc: thuNhapNhomGoc,
+        tongThuNhap: tongThuNhap
+    });
+
+    return {
+        chiSoGoc,
+        thuNhapNhomGoc,
+        tongThuNhap
+    };
+}
+
+// 4. Hàm bổ sung hiển thị dữ liệu ra màn hình
+function hienThiKetQuaLenGiaoDien(data) {
+    const elFYP = document.getElementById('card-fyp-nhom');
+    const elK2 = document.getElementById('card-k2-nhom');
+    const elTongThuNhap = document.getElementById('card-tong-thu-nhap');
+
+    if (elFYP) elFYP.innerText = data.fypNhomGoc.toLocaleString('vi-VN') + ' VNĐ';
+    if (elK2) elK2.innerText = (data.k2NhomGoc * 100).toFixed(1) + '%';
+    if (elTongThuNhap) elTongThuNhap.innerText = data.tongThuNhap.toLocaleString('vi-VN') + ' VNĐ';
+}
