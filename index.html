@@ -49,13 +49,8 @@
     <div class="safe">APM01 • BC02 • KPI04 • Tháng / Quý / Năm</div>
   </header>
   <section class="hero">
-<<<<<<< HEAD
     <div><span class="eyebrow">DỰ BÁO THU NHẬP TN</span><h1>Thu nhập rõ ràng.<br><em>Hành động đúng lúc.</em></h1><p>Bảo Việt Nhân Thọ Sơn La • Theo dõi IP, thu nhập và mục tiêu kinh doanh TVV theo tháng, quý, năm.</p></div>
     <div class="flow"><small>QUY TRÌNH TỰ ĐỘNG</small><strong>APM01 <i>+</i> BC02 <i>+</i> KPI04</strong><span>Ghép nhóm • Lọc hồ sơ • Tính thu nhập và mục tiêu</span></div>
-=======
-    <div><span class="eyebrow">BẢNG ĐIỀU HÀNH TRƯỞNG NHÓM</span><h1>Thu nhập rõ ràng.<br><em>Hành động đúng lúc.</em></h1><p>Tải APM01, BC02 và KPI04 để dự báo thưởng Tháng, Quý, Năm.</p></div>
-    <div class="flow"><small>QUY TRÌNH TỰ ĐỘNG</small><strong>APM01 <i>+</i> BC02 <i>+</i> KPI04</strong><span>Ghép nhóm • Lọc hồ sơ • Tính thưởng</span></div>
->>>>>>> 17cbf57bd44357d695a62344e1179b811e23c102
   </section>
 
   <section class="wrap upload-section">
@@ -182,11 +177,7 @@
     const tx=p=>p.issueDate||p.paidDate;
     function contractSummary(rows){const map=new Map();rows.forEach((p,i)=>{const key=p.id||`${p.agentCode}-row-${i}`,old=map.get(key)||{ip:0,agentCode:p.agentCode};old.ip+=p.ip;map.set(key,old)});return[...map.values()]}
     function read(file){return file.arrayBuffer().then(b=>{const w=XLSX.read(b,{type:"array",cellDates:true});return XLSX.utils.sheet_to_json(w.Sheets[w.SheetNames[0]],{header:1,raw:true,defval:null})})}
-<<<<<<< HEAD
     function parseApm(rows){return rows.slice(1).map(r=>({team:String(r[1]??"").trim(),teamId:String(r[20]??"").trim(),code:String(r[2]??"").trim(),name:String(r[3]??"").trim(),start:date(r[4]),status:String(r[5]??""),role:String(r[6]??""),roleDate:date(r[7]),recruiterCode:String(r[8]??"").trim(),objectType:String(r[13]??""),groupName:String(r[0]??"").trim()})).filter(a=>a.code)}
-=======
-    function parseApm(rows){return rows.slice(1).map(r=>({team:String(r[1]??"").trim(),teamId:String(r[20]??"").trim(),code:String(r[2]??"").trim(),name:String(r[3]??"").trim(),start:date(r[4]),status:String(r[5]??""),role:String(r[6]??""),roleDate:date(r[7]),recruiterCode:String(r[8]??"").trim(),objectType:String(r[13]??"")})).filter(a=>a.code)}
->>>>>>> 17cbf57bd44357d695a62344e1179b811e23c102
     function parseBc(rows){return rows.slice(2).map(r=>({id:String(r[18]??r[16]??""),teamId:String(r[12]??""),teamName:String(r[13]??""),agentCode:String(r[14]??""),agentName:String(r[15]??""),status:String(r[20]??""),paidDate:date(r[21]),issueDate:date(r[24]),ip:Number(r[40]??0)||0,source:"BC02"})).filter(p=>p.agentCode&&p.ip>0)}
     const kpiAliases={id:["SO HOP DONG","MA HOP DONG","SO HD","HOP DONG"],agentCode:["MA TVV","MA DAI LY","MA TVV DAI LY","MA SO TVV","MA AGENT","AGENT CODE"],agentName:["TEN TVV","TEN DAI LY","TEN AGENT","HO TEN"],teamId:["MA NHOM","MA DOI","TEAM ID","MA BAN"],teamName:["TEN NHOM","TEN DOI","TEN BAN","TEAM NAME"],status:["TRANG THAI","TINH TRANG","STATUS"],issueDate:["NGAY PHAT HANH","NGAY HIEU LUC","NGAY CAP DON","NGAY PHAT HANH HOP DONG","NGAY"],ip:["IP","FYP","PHI NAM DAU","PHI BAO HIEM","DOANH THU BAO HIEM","DOANH THU"]};
     const headerHas=(v,a)=>{const n=norm(v);return a.some(x=>n===x||n.includes(x))};
@@ -234,11 +225,7 @@
     function ready(){
       policies=mergePolicies(bcPolicies,kpiPolicies);
       if(!agents.length||!bcPolicies.length)return;
-<<<<<<< HEAD
       leaders=agents.filter(a=>isLeaderRole(a)&&norm(a.status)==="HOAT DONG").map(l=>{const scope=buildLeaderScope(l);return{...l,...scope,members:scope.memberCodes.size}}).sort((a,b)=>a.name.localeCompare(b.name,"vi"));
-=======
-      leaders=agents.filter(a=>norm(a.role)==="TRUONG NHOM"&&norm(a.status)==="HOAT DONG"&&norm(a.objectType)==="DAI LY CA NHAN").map(l=>({...l,members:agents.filter(a=>a.teamId&&a.teamId===l.teamId&&norm(a.status)==="HOAT DONG"&&norm(a.objectType)==="DAI LY CA NHAN").length})).sort((a,b)=>a.name.localeCompare(b.name,"vi"));
->>>>>>> 17cbf57bd44357d695a62344e1179b811e23c102
       const dataYears=[...new Set(policies.map(tx).filter(Boolean).map(d=>d.getFullYear()))];
       months=dataYears.flatMap(y=>Array.from({length:12},(_,i)=>`${y}-${String(i+1).padStart(2,"0")}`)).sort().reverse();
       renderLeaderOptions("");
@@ -263,11 +250,7 @@
     $("leaderSearch").addEventListener("input",e=>{renderLeaderOptions(e.target.value);if($("leaderSelect").value){$("empty").style.display="none";$("result").classList.add("show");loadManualBonuses();calculate()}else{$("result").classList.remove("show");$("empty").style.display="grid";$("empty").innerHTML="<b>Không tìm thấy Trưởng nhóm</b><p>Hãy thử nhập tên ngắn hơn hoặc xóa nội dung tìm kiếm.</p>"}});
     function renderIpStats(leader,year,members,currentMonth){
       const monthly=Array.from({length:12},()=>({team:0,personal:0,agents:new Map()}));
-<<<<<<< HEAD
       for(const p of policies){const d=tx(p);if(!d||d.getFullYear()!==year||!valid(p.status)||!members.has(String(p.agentCode||"").trim()))continue;const m=d.getMonth(),bucket=monthly[m];bucket.team+=p.ip;if(p.agentCode===leader.code)bucket.personal+=p.ip;bucket.agents.set(p.agentCode,(bucket.agents.get(p.agentCode)||0)+p.ip)}
-=======
-      for(const p of policies){const d=tx(p);if(!d||d.getFullYear()!==year||!valid(p.status)||!(p.teamId===leader.teamId||members.has(p.agentCode)))continue;const m=d.getMonth(),bucket=monthly[m];bucket.team+=p.ip;if(p.agentCode===leader.code)bucket.personal+=p.ip;bucket.agents.set(p.agentCode,(bucket.agents.get(p.agentCode)||0)+p.ip)}
->>>>>>> 17cbf57bd44357d695a62344e1179b811e23c102
       const quarters=Array.from({length:4},(_,q)=>monthly.slice(q*3,q*3+3).reduce((a,b)=>({team:a.team+b.team,personal:a.personal+b.personal,hdc:a.hdc+b.agents.size}),{team:0,personal:0,hdc:0}));
       const yearTotal=monthly.reduce((a,b)=>({team:a.team+b.team,personal:a.personal+b.personal,hdc:a.hdc+b.agents.size}),{team:0,personal:0,hdc:0});
       $("ipStatsYear").textContent=`Năm ${year}`;
@@ -276,13 +259,8 @@
     }
     function calculate(){
       const leader=leaders.find(l=>l.code===$("leaderSelect").value), mk=$("monthSelect").value;if(!leader||!mk)return;
-<<<<<<< HEAD
       const [year,mn]=mk.split("-").map(Number), target=new Date(year,mn-1,28), members=leader.memberCodes||buildLeaderScope(leader).memberCodes;
       const belongs=p=>members.has(String(p.agentCode||"").trim());
-=======
-      const [year,mn]=mk.split("-").map(Number), target=new Date(year,mn-1,28), members=new Set(agents.filter(a=>a.teamId===leader.teamId).map(a=>a.code));members.add(leader.code);
-      const belongs=p=>String(p.teamId||"").trim()===String(leader.teamId||"").trim()||members.has(String(p.agentCode||"").trim());
->>>>>>> 17cbf57bd44357d695a62344e1179b811e23c102
       renderIpStats(leader,year,members,mn);
       const rows=policies.filter(p=>{const d=tx(p);return belongs(p)&&d&&mkey(d)===mk&&valid(p.status)});
       const ipByAgent=new Map();rows.forEach(p=>ipByAgent.set(p.agentCode,(ipByAgent.get(p.agentCode)||0)+p.ip));const qualifyingHdcAgentCodes=new Set([...ipByAgent].filter(([,agentIp])=>agentIp>=12e6).map(([code])=>code)),ip=rows.reduce((s,p)=>s+p.ip,0),hdc=qualifyingHdcAgentCodes.size,issued=rows.filter(p=>norm(p.status)==="CO HIEU LUC").reduce((s,p)=>s+p.ip,0),pending=ip-issued,fyc=ip*.3,rate=monthlyRate(ip,hdc),business=fyc*rate;
