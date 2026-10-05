@@ -232,8 +232,23 @@
           ? {shortKey:"PHHT",aliases:["QLTT PHHT","PHHT","PHUONG HOANG HUNG THINH"]}
           : null;
       const banKey=norm(leader.team),shortKey=boardScope?.shortKey||initials(leader.team),aliases=[...(boardScope?.aliases||[]),banKey,shortKey,`QLTT ${shortKey}`].filter((x,i,a)=>x&&x.length>=3&&a.indexOf(x)===i);
+      // Quàng Thị Giót đã tách Ban độc lập. Khi xem Phạm Thị Nguyệt,
+      // loại toàn bộ mã của Quàng và tuyến TVV do Quàng trực tiếp/quy hồi tuyển.
+      // Không chỉ loại theo tên hiển thị để tránh Ban độc lập quay lại qua QLTT chung.
+      const independentLeader=agents.find(a=>norm(a.name).includes("QUANG THI GIOT")&&isLeaderRole(a));
+      const independentCode=independentLeader?.code;
+      const belongsToIndependentBoard=a=>{
+        if(!independentCode)return false;
+        let code=a.code,seen=new Set();
+        while(code&&!seen.has(code)){
+          if(code===independentCode)return true;
+          seen.add(code);code=agents.find(x=>x.code===code)?.recruiterCode;
+        }
+        return false;
+      };
       const memberCodes=new Set(agents.filter(a=>{
         if(a.code===leader.code)return true;
+        if(leaderName.includes("PHAM THI NGUYET")&&belongsToIndependentBoard(a))return false;
         if(!isBoard)return !!leader.teamId&&String(a.teamId||"").trim()===String(leader.teamId||"").trim();
         const blank=!String(a.teamId||"").trim(),direct=a.recruiterCode===leader.code;
         const orgText=norm(`${a.team||""} ${a.groupName||""}`);
